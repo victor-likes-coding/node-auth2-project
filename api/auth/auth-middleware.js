@@ -19,7 +19,7 @@ const restricted = (req, res, next) => {
     Put the decoded token in the req object, to make life easier for middlewares downstream!
     */
   const token = req.headers.authorization;
-  if (token)
+  if (!token)
     next({
       status: 401,
       message: 'Token required',
@@ -72,7 +72,7 @@ const checkUsernameExists = async (req, res, next) => {
     }
   */ try {
     const { username } = req.body;
-    const user = await findBy('users').where({ username }).first();
+    const [user] = await findBy({ username });
     if (!user) {
       next({
         status: 401,
@@ -110,18 +110,21 @@ const validateRoleName = (req, res, next) => {
   if (!role_name || role_name.trim() === '') {
     req.role_name = 'student';
     next();
+    return;
   }
   if (role_name.trim() === 'admin') {
     next({
       status: 422,
       message: 'Role name can not be admin',
     });
+    return;
   }
   if (role_name.trim().length > 32) {
     next({
       status: 422,
       message: 'Role name can not be longer than 32 chars',
     });
+    return;
   }
   req.role_name = role_name.trim();
   next();
